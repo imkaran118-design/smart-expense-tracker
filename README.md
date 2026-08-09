@@ -1,19 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Expense Tracker</title>
 
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f4f4f4;
-      margin: 0;
       padding: 20px;
     }
 
-    .container {
+    .box {
       max-width: 500px;
       margin: auto;
       background: white;
@@ -21,88 +18,80 @@
       border-radius: 15px;
     }
 
-    h1 {
-      text-align: center;
-    }
-
-    input, button {
+    input {
       width: 100%;
       padding: 12px;
-      margin-top: 10px;
+      margin: 8px 0;
       box-sizing: border-box;
     }
 
     button {
+      padding: 12px 20px;
+      margin-top: 8px;
       cursor: pointer;
-      font-size: 16px;
     }
 
-    .total {
+    #result {
       margin-top: 20px;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
-    }
-
-    li {
-      margin-top: 10px;
-      padding: 10px;
-      background: #f1f1f1;
-      list-style: none;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="box">
 
-    <h1>💰 Smart Expense Tracker</h1>
+  <h1>💰 Smart Expense Tracker</h1>
 
-    <p>Track your expenses easily 🚀</p>
+  <p>Track your expenses easily 🚀</p>
 
-    <input id="expenseName" type="text" placeholder="Expense name">
+  <h2>Add Expense</h2>
 
-    <input id="expenseAmount" type="number" placeholder="Amount">
+  <input id="name" type="text" placeholder="Expense name">
 
-    <button onclick="addExpense()">Add Expense</button>
+  <input id="amount" type="number" placeholder="Amount">
 
-    <div class="total">
-      Total: ₹<span id="total">0</span>
-    </div>
+  <button id="addBtn">Add Expense</button>
 
-    <ul id="expenseList"></ul>
-
+  <div id="result">
+    Total: ₹0
   </div>
 
-  <script>
-    let total = 0;
+  <ul id="list"></ul>
 
-    function addExpense() {
+</div>
 
-      const name = document.getElementById("expenseName").value;
-      const amount = Number(document.getElementById("expenseAmount").value);
+<script>
+  let total = 0;
 
-      if (name === "" || amount <= 0) {
-        alert("Please enter expense name and amount!");
-        return;
-      }
+  document.getElementById("addBtn").addEventListener("click", function() {
 
-      total += amount;
+    let name = document.getElementById("name").value;
+    let amount = Number(document.getElementById("amount").value);
 
-      document.getElementById("total").textContent = total;
-
-      const list = document.getElementById("expenseList");
-
-      const item = document.createElement("li");
-
-      item.textContent = name + " — ₹" + amount;
-
-      list.appendChild(item);
-
-      document.getElementById("expenseName").value = "";
-      document.getElementById("expenseAmount").value = "";
+    if (name === "" || amount <= 0) {
+      alert("Please enter expense name and amount!");
+      return;
     }
-  </script>
+
+    total = total + amount;
+
+    document.getElementById("result").innerText =
+      "Total: ₹" + total;
+
+    let item = document.createElement("li");
+
+    item.innerText = name + " — ₹" + amount;
+
+    document.getElementById("list").appendChild(item);
+
+    document.getElementById("name").value = "";
+    document.getElementById("amount").value = "";
+
+  });
+</script>
 
 </body>
 </html>
