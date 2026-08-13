@@ -4,20 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Expense Tracker</title>
-</head>
+    <style>
+        /* ===== CSS: Yahan hum decide karte hain sab kaisa DIKHEGA ===== */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding: 30px 15px;
+        }
 
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #222;
+        }
+
+        p {
+            text-align: center;
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+        }
+
+        li button {
+            background: #e74c3c;
+            padding: 5px 10px;
+        }
+
+        li button:hover {
+            background: #c0392b;
+        }
+
+        .total {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+            color: #222;
+        }
+    </style>
+</head>
 <body>
 
-    <h1>Smart Expense Tracker</h1>
+    <div class="container">
+        <h1>Smart Expense Tracker</h1>
+        <p>My first working project 🚀</p>
 
-    <p>My first web development project 🚀</p>
+        <h2>Add Expense</h2>
 
-    <h2>Add Expense</h2>
+        <div class="input-row">
+            <input type="text" id="expenseName" placeholder="Expense name">
+            <input type="number" id="expenseAmount" placeholder="Amount">
+        </div>
 
-    <input type="text" placeholder="Expense name">
-    <input type="number" placeholder="Amount">
+        <button onclick="addExpense()">Add Expense</button>
 
-    <button>Add Expense</button>
+        <ul id="expenseList"></ul>
+
+        <div class="total">Total: ₹<span id="totalAmount">0</span></div>
+    </div>
+
+    <script>
+        // ===== JavaScript: Yahan hum decide karte hain button dabane par kya HOGA =====
+
+        let total = 0; // total amount track karne ke liye variable
+
+        function addExpense() {
+            // Step 1: Input boxes se value nikalo
+            const nameInput = document.getElementById("expenseName");
+            const amountInput = document.getElementById("expenseAmount");
+
+            const name = nameInput.value;
+            const amount = Number(amountInput.value);
+
+            // Step 2: Check karo koi khaali toh nahi chhoda
+            if (name === "" || amount <= 0 || isNaN(amount)) {
+                alert("Please enter valid expense name and amount!");
+                return; // yahin ruk jao, aage mat badho
+            }
+
+            // Step 3: Naya list item (<li>) banao
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <span>${name} - ₹${amount}</span>
+                <button onclick="removeExpense(this, ${amount})">Delete</button>
+            `;
+
+            // Step 4: Usko list mein add karo
+            document.getElementById("expenseList").appendChild(li);
+
+            // Step 5: Total update karo
+            total += amount;
+            document.getElementById("totalAmount").innerText = total;
+
+            // Step 6: Input boxes khaali kar do agle expense ke liye
+            nameInput.value = "";
+            amountInput.value = "";
+        }
+
+        function removeExpense(button, amount) {
+            // jis <li> ke andar ye button hai, use hata do
+            button.parentElement.remove();
+
+            // total mein se amount ghata do
+            total -= amount;
+            document.getElementById("totalAmount").innerText = total;
+        }
+    </script>
 
 </body>
 </html>
