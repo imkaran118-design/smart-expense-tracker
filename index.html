@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Expense Tracker</title>
     <style>
-        /* ===== CSS: Yahan hum decide karte hain sab kaisa DIKHEGA ===== */
         body {
             font-family: Arial, sans-serif;
             background: #f4f4f4;
@@ -19,7 +18,7 @@
             padding: 25px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 450px;
+            max-width: 480px;
             width: 100%;
         }
 
@@ -42,12 +41,14 @@
 
         .input-row {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
             margin: 15px 0;
         }
 
-        input {
+        input, select {
             flex: 1;
+            min-width: 100px;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -79,26 +80,48 @@
             justify-content: space-between;
             align-items: center;
             background: #f9f9f9;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 8px;
-            border-radius: 5px;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .expense-info .name {
+            font-weight: bold;
+            color: #222;
+        }
+
+        .expense-info .details {
+            font-size: 12px;
+            color: #888;
         }
 
         li button {
             background: #e74c3c;
-            padding: 5px 10px;
+            padding: 6px 12px;
         }
 
         li button:hover {
             background: #c0392b;
         }
 
-        .total {
+        .total-box {
             margin-top: 20px;
-            font-size: 18px;
+            padding: 15px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .total-box .label {
+            color: #eaffea;
+            font-size: 13px;
+        }
+
+        .total-box .amount {
+            color: white;
+            font-size: 28px;
             font-weight: bold;
-            text-align: right;
-            color: #222;
         }
     </style>
 </head>
@@ -115,59 +138,94 @@
             <input type="number" id="expenseAmount" placeholder="Amount">
         </div>
 
+        <div class="input-row">
+            <select id="expenseCategory">
+                <option value="Food">🍔 Food</option>
+                <option value="Travel">🚗 Travel</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Bills">🧾 Bills</option>
+                <option value="Other">📦 Other</option>
+            </select>
+            <input type="date" id="expenseDate">
+        </div>
+
         <button onclick="addExpense()">Add Expense</button>
 
         <ul id="expenseList"></ul>
 
-        <div class="total">Total: ₹<span id="totalAmount">0</span></div>
+        <div class="total-box">
+            <div class="label">TOTAL SPENT</div>
+            <div class="amount">₹<span id="totalAmount">0</span></div>
+        </div>
     </div>
 
     <script>
-        // ===== JavaScript: Yahan hum decide karte hain button dabane par kya HOGA =====
+        // Page load hote hi purana saved data wapas laao
+        let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+        let total = 0;
 
-        let total = 0; // total amount track karne ke liye variable
+        // Aaj ki date default set kar do input mein
+        document.getElementById("expenseDate").valueAsDate = new Date();
 
         function addExpense() {
-            // Step 1: Input boxes se value nikalo
             const nameInput = document.getElementById("expenseName");
             const amountInput = document.getElementById("expenseAmount");
+            const categoryInput = document.getElementById("expenseCategory");
+            const dateInput = document.getElementById("expenseDate");
 
             const name = nameInput.value;
             const amount = Number(amountInput.value);
+            const category = categoryInput.value;
+            const date = dateInput.value;
 
-            // Step 2: Check karo koi khaali toh nahi chhoda
             if (name === "" || amount <= 0 || isNaN(amount)) {
                 alert("Please enter valid expense name and amount!");
-                return; // yahin ruk jao, aage mat badho
+                return;
             }
 
-            // Step 3: Naya list item (<li>) banao
-            const li = document.createElement("li");
-            li.innerHTML = `
-                <span>${name} - ₹${amount}</span>
-                <button onclick="removeExpense(this, ${amount})">Delete</button>
-            `;
+            // Ek expense object banaya - naam, amount, category, date sab ek sath
+            const expense = { name, amount, category, date };
+            expenses.push(expense);
 
-            // Step 4: Usko list mein add karo
-            document.getElementById("expenseList").appendChild(li);
+            saveAndRender();
 
-            // Step 5: Total update karo
-            total += amount;
-            document.getElementById("totalAmount").innerText = total;
-
-            // Step 6: Input boxes khaali kar do agle expense ke liye
             nameInput.value = "";
             amountInput.value = "";
         }
 
-        function removeExpense(button, amount) {
-            // jis <li> ke andar ye button hai, use hata do
-            button.parentElement.remove();
+        function removeExpense(index) {
+            expenses.splice(index, 1); // list se hata do
+            saveAndRender();
+        }
 
-            // total mein se amount ghata do
-            total -= amount;
+        function saveAndRender() {
+            // Browser ki memory mein save karo (refresh ke baad bhi rahega)
+            localStorage.setItem("expenses", JSON.stringify(expenses));
+
+            // List aur total dobara banao
+            const listElement = document.getElementById("expenseList");
+            listElement.innerHTML = "";
+            total = 0;
+
+            expenses.forEach((exp, index) => {
+                total += exp.amount;
+
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <div class="expense-info">
+                        <div class="name">${exp.name} - ₹${exp.amount}</div>
+                        <div class="details">${exp.category} • ${exp.date}</div>
+                    </div>
+                    <button onclick="removeExpense(${index})">Delete</button>
+                `;
+                listElement.appendChild(li);
+            });
+
             document.getElementById("totalAmount").innerText = total;
         }
+
+        // Page khulte hi purana data dikha do
+        saveAndRender();
     </script>
 
 </body>
