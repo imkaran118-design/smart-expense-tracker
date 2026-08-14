@@ -69,6 +69,23 @@
             background: #45a049;
         }
 
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .filter-row label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .filter-row select {
+            flex: 1;
+        }
+
         ul {
             list-style: none;
             padding: 0;
@@ -103,6 +120,13 @@
 
         li button:hover {
             background: #c0392b;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 14px;
         }
 
         .total-box {
@@ -151,6 +175,19 @@
 
         <button onclick="addExpense()">Add Expense</button>
 
+        <!-- ===== NAYA: Filter dropdown ===== -->
+        <div class="filter-row">
+            <label>Filter:</label>
+            <select id="filterCategory" onchange="saveAndRender()">
+                <option value="All">Show All</option>
+                <option value="Food">🍔 Food</option>
+                <option value="Travel">🚗 Travel</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Bills">🧾 Bills</option>
+                <option value="Other">📦 Other</option>
+            </select>
+        </div>
+
         <ul id="expenseList"></ul>
 
         <div class="total-box">
@@ -160,11 +197,9 @@
     </div>
 
     <script>
-        // Page load hote hi purana saved data wapas laao
         let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
         let total = 0;
 
-        // Aaj ki date default set kar do input mein
         document.getElementById("expenseDate").valueAsDate = new Date();
 
         function addExpense() {
@@ -183,7 +218,6 @@
                 return;
             }
 
-            // Ek expense object banaya - naam, amount, category, date sab ek sath
             const expense = { name, amount, category, date };
             expenses.push(expense);
 
@@ -194,37 +228,51 @@
         }
 
         function removeExpense(index) {
-            expenses.splice(index, 1); // list se hata do
+            expenses.splice(index, 1);
             saveAndRender();
         }
 
         function saveAndRender() {
-            // Browser ki memory mein save karo (refresh ke baad bhi rahega)
             localStorage.setItem("expenses", JSON.stringify(expenses));
 
-            // List aur total dobara banao
+            // ===== NAYA: Filter kya select hai, wo padho =====
+            const selectedFilter = document.getElementById("filterCategory").value;
+
+            // ===== NAYA: Sirf wahi expenses rakho jo filter se match karte hain =====
+            let filteredExpenses = expenses;
+            if (selectedFilter !== "All") {
+                filteredExpenses = expenses.filter(exp => exp.category === selectedFilter);
+            }
+
             const listElement = document.getElementById("expenseList");
             listElement.innerHTML = "";
+
+            // ===== Total hamesha SAB expenses ka rahega (filter se total change nahi hoga) =====
             total = 0;
+            expenses.forEach(exp => total += exp.amount);
 
-            expenses.forEach((exp, index) => {
-                total += exp.amount;
+            if (filteredExpenses.length === 0) {
+                listElement.innerHTML = `<div class="empty-msg">Is category mein koi expense nahi hai</div>`;
+            } else {
+                filteredExpenses.forEach((exp) => {
+                    // asli list mein iska index dhundo (delete ke liye zaroori hai)
+                    const realIndex = expenses.indexOf(exp);
 
-                const li = document.createElement("li");
-                li.innerHTML = `
-                    <div class="expense-info">
-                        <div class="name">${exp.name} - ₹${exp.amount}</div>
-                        <div class="details">${exp.category} • ${exp.date}</div>
-                    </div>
-                    <button onclick="removeExpense(${index})">Delete</button>
-                `;
-                listElement.appendChild(li);
-            });
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <div class="expense-info">
+                            <div class="name">${exp.name} - ₹${exp.amount}</div>
+                            <div class="details">${exp.category} • ${exp.date}</div>
+                        </div>
+                        <button onclick="removeExpense(${realIndex})">Delete</button>
+                    `;
+                    listElement.appendChild(li);
+                });
+            }
 
             document.getElementById("totalAmount").innerText = total;
         }
 
-        // Page khulte hi purana data dikha do
         saveAndRender();
     </script>
 
