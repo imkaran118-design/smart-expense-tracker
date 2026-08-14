@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Expense Tracker</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e8f5e9, #f4f4f4);
             display: flex;
             justify-content: center;
             padding: 30px 15px;
@@ -16,10 +20,16 @@
         .container {
             background: white;
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             max-width: 480px;
             width: 100%;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h1 {
@@ -51,8 +61,14 @@
             min-width: 100px;
             padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
         }
 
         button {
@@ -60,13 +76,18 @@
             background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            transition: background 0.2s, transform 0.1s;
         }
 
         button:hover {
             background: #45a049;
+        }
+
+        button:active {
+            transform: scale(0.97);
         }
 
         .filter-row {
@@ -86,6 +107,35 @@
             flex: 1;
         }
 
+        /* ===== NAYA: Category summary cards ===== */
+        .summary-box {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .summary-card {
+            flex: 1;
+            min-width: 90px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border-top: 3px solid #4CAF50;
+        }
+
+        .summary-card .cat-name {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .summary-card .cat-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #222;
+        }
+
         ul {
             list-style: none;
             padding: 0;
@@ -99,8 +149,14 @@
             background: #f9f9f9;
             padding: 12px;
             margin-bottom: 8px;
-            border-radius: 6px;
+            border-radius: 8px;
             border-left: 4px solid #4CAF50;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .expense-info .name {
@@ -133,7 +189,7 @@
             margin-top: 20px;
             padding: 15px;
             background: linear-gradient(135deg, #4CAF50, #45a049);
-            border-radius: 8px;
+            border-radius: 10px;
             text-align: center;
         }
 
@@ -175,7 +231,6 @@
 
         <button onclick="addExpense()">Add Expense</button>
 
-        <!-- ===== NAYA: Filter dropdown ===== -->
         <div class="filter-row">
             <label>Filter:</label>
             <select id="filterCategory" onchange="saveAndRender()">
@@ -187,6 +242,9 @@
                 <option value="Other">📦 Other</option>
             </select>
         </div>
+
+        <!-- ===== NAYA: Category-wise summary yahan dikhega ===== -->
+        <div class="summary-box" id="summaryBox"></div>
 
         <ul id="expenseList"></ul>
 
@@ -232,13 +290,41 @@
             saveAndRender();
         }
 
+        // ===== NAYA FUNCTION: Category ke hisaab se total nikalta hai =====
+        function renderSummary() {
+            // Ek khaali "dabba" (object) banaya jisme har category ka total store hoga
+            // Jaise: { Food: 500, Travel: 200 }
+            const categoryTotals = {};
+
+            expenses.forEach(exp => {
+                // Agar is category ka entry pehle se nahi hai, toh 0 se shuru karo
+                if (!categoryTotals[exp.category]) {
+                    categoryTotals[exp.category] = 0;
+                }
+                // Us category mein amount add karo
+                categoryTotals[exp.category] += exp.amount;
+            });
+
+            const summaryBox = document.getElementById("summaryBox");
+            summaryBox.innerHTML = "";
+
+            // Object ki har "key" (category naam) pe loop chalao
+            for (const category in categoryTotals) {
+                const card = document.createElement("div");
+                card.className = "summary-card";
+                card.innerHTML = `
+                    <div class="cat-name">${category}</div>
+                    <div class="cat-amount">₹${categoryTotals[category]}</div>
+                `;
+                summaryBox.appendChild(card);
+            }
+        }
+
         function saveAndRender() {
             localStorage.setItem("expenses", JSON.stringify(expenses));
 
-            // ===== NAYA: Filter kya select hai, wo padho =====
             const selectedFilter = document.getElementById("filterCategory").value;
 
-            // ===== NAYA: Sirf wahi expenses rakho jo filter se match karte hain =====
             let filteredExpenses = expenses;
             if (selectedFilter !== "All") {
                 filteredExpenses = expenses.filter(exp => exp.category === selectedFilter);
@@ -247,7 +333,6 @@
             const listElement = document.getElementById("expenseList");
             listElement.innerHTML = "";
 
-            // ===== Total hamesha SAB expenses ka rahega (filter se total change nahi hoga) =====
             total = 0;
             expenses.forEach(exp => total += exp.amount);
 
@@ -255,7 +340,6 @@
                 listElement.innerHTML = `<div class="empty-msg">Is category mein koi expense nahi hai</div>`;
             } else {
                 filteredExpenses.forEach((exp) => {
-                    // asli list mein iska index dhundo (delete ke liye zaroori hai)
                     const realIndex = expenses.indexOf(exp);
 
                     const li = document.createElement("li");
@@ -271,6 +355,8 @@
             }
 
             document.getElementById("totalAmount").innerText = total;
+
+            renderSummary(); // NAYA: summary bhi update karo
         }
 
         saveAndRender();
